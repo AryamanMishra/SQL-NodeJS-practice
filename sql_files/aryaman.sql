@@ -4,3 +4,8 @@ CREATE TABLE users(
     email VARCHAR(255) NOT NULL 
 );
 SELECT * from users;
+ALTER TABLE users ADD  password VARCHAR(255) NOT NULL ;
+DELETE FROM users;
+
+SELECT * FROM users WHERE email= AND password=;
+ALTER table users DROP email
