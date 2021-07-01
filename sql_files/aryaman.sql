@@ -8,4 +8,5 @@ ALTER TABLE users ADD  password VARCHAR(255) NOT NULL ;
 DELETE FROM users;
 
 SELECT * FROM users WHERE email= AND password=;
-ALTER table users DROP email
+ALTER table users DROP email;
+ALTER TABLE users ADD PRIMARY KEY (id);

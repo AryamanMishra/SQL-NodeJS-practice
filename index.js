@@ -3,6 +3,9 @@ const app = express()
 const path = require('path')
 const uniqid = require('uniqid')
 const connectdb = require('./connect')
+const flash = require('express-flash')
+const session = require('express-session');
+const cookieParser = require('cookie-parser')
 
 connectdb.connect((err) => {
     if (err) throw err
@@ -14,9 +17,25 @@ app.set('views', path.join(__dirname,'views'))
 app.use(express.static(__dirname + '/public'));
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
+app.use(cookieParser())
+app.use(session({
+    name: 'session',
+    secret: process.env.SECRET || 'thisisasecret!',
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        httpOnly: true,
+        // secure: true,
+        expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+        maxAge: 1000 * 60 * 60 * 24 * 7
+    }
+}))
+
+app.use(flash())
 
 
 app.get('/', (req,res) => {
+    req.flash('info', 'Welcome');
     res.render('home')
     
 })
@@ -57,7 +76,6 @@ app.get('/signup', (req,res) => {
 
 app.post('/signup', (req,res) => {
     let body = req.body
-    let id = uniqid()
     let sql = `SELECT * FROM users WHERE password= '${body.password}' AND first_name = '${body.first_name}' AND last_name = '${body.last_name}'`
     connectdb.query(sql, (err,result) => {
         if (err) throw err
