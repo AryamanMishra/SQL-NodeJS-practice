@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 const path = require('path')
+const uniqid = require('uniqid')
 const connectdb = require('./connect')
 
 connectdb.connect((err) => {
@@ -29,6 +30,26 @@ app.get('/users', (req,res) => {
 })
 
 
+app.get('/login', (req,res) => {
+    res.render('login')
+})
+
+
+app.post('/login', (req,res) => {
+    let body = req.body
+    let sql = `SELECT * FROM users WHERE password= '${body.password}' AND first_name = '${body.first_name}' AND last_name = '${body.last_name}'`
+    connectdb.query(sql, (err,result) => {
+        if (err) throw err
+        if (JSON.stringify(result) === '[]') {
+            res.render('loginError')
+        } 
+        else {
+            res.redirect(`/users/${result[0].id}`)
+        }
+    })
+})
+
+
 app.get('/signup', (req,res) => {
     res.render('signup')
 
@@ -36,14 +57,35 @@ app.get('/signup', (req,res) => {
 
 app.post('/signup', (req,res) => {
     let body = req.body
-    let sql = `INSERT INTO users(first_name,last_name,email) VALUES('${body.first_name}','${body.last_name}','${body.email}')`
+    let id = uniqid()
+    let sql = `SELECT * FROM users WHERE password= '${body.password}' AND first_name = '${body.first_name}' AND last_name = '${body.last_name}'`
     connectdb.query(sql, (err,result) => {
         if (err) throw err
-        console.log('user saved in db')
-        res.redirect('/')
+        if (JSON.stringify(result) === '[]') {
+            let id = uniqid()
+            let sql = `INSERT INTO users(first_name,last_name,id,password) VALUES('${body.first_name}','${body.last_name}','${id}','${body.password}')`
+            connectdb.query(sql, (err,result) => {
+                if (err) throw err;
+                console.log('user saved in db')
+                res.redirect(`/users/${id}`)
+            })
+        }
+        else {
+            console.log('user already exists')
+            res.redirect(`/users/${result[0].id}`)
+        }
     })
 })
 
+
+app.get('/users/:id', (req,res) => {
+    const id = req.params.id
+    let sql = `SELECT * FROM USERS WHERE id = '${id}'`;
+    connectdb.query(sql, (err,result) => {
+        if (err) throw err
+        res.render('userProfile', {result})
+    })
+})
 
 app.listen(5000, () => {
     console.log('LISTENING ON PORT 5000')
